@@ -4,7 +4,7 @@ on:
     branches:
       - main
 env:
-  RESOURCE_GROUP: ${{ secrets.AZURE_RESOOURCE_GROUP }}
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOURCE_GROUP }}
   REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
   CLUSTER_NAME: ${{ secrets.AZURE_KUBERNETES_CLUSTER }}
   IMAGE_NAME: nimbus-site
@@ -32,7 +32,7 @@ jobs:
     - name: Push Image
       run: docker push $IMAGE
     - name: Get AKS credentials
-      run: az aks get-credentails --resources-group $RESOURCES_GROUP --name $CLUSTER_NAME
+      run: az aks get-credentails --resources-group $RESOURCES_GROUP --name $CLUSTER_NAME  --overwrite-existing
     - name: deploy clusters
       run: |
         kubectl apply -f k8s/deployment.yaml
