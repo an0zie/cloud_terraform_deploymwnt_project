@@ -28,7 +28,7 @@ jobs:
     - name: Push Image
       run: docker push $IMAGE
     - name: Get AKS credentials
-      run: az aks get-credentails --resources-group $RESOURCES_GROUP --name $CLUSTER_NAME  --overwrite-existing
+      run: az aks get-credentials --resources-group $RESOURCES_GROUP --name $CLUSTER_NAME  --overwrite-existing
     - name: deploy clusters
       run: |
         kubectl apply -f k8s/deployment.yaml
