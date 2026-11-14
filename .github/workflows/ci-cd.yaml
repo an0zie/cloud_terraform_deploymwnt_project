@@ -1,0 +1,44 @@
+name: CI-CD Pipeline
+on:
+  push:
+    branches:
+      - main
+env:
+  RESOURCE_GROUP: ${{ secrets.AZURE_RESOOURCE_GROUP }}
+  REGISTRY: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+  CLUSTER_NAME: ${{ secrets.AZURE_KUBERNETES_CLUSTER }}
+  IMAGE_NAME: nimbus-site
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+    - name: CLI setup
+      uses: azure/CLI@v1
+      with:
+        azcliversion: 2.49.0    
+    - name: ACR login
+      run: az acr login --name $REGISTRY
+    - name:  Build Image
+      run: |
+        IMAGE=$REGISTRY/$IMAGE_NAME:${{ github.sha }}
+        echo "IMAGE=$IMAGE" >> $GITHUB_ENV
+        docker build -f nimbus-site/dockerfile -t $IMAGE nimbus-site/
+    - name: Push Image
+      run: docker push $IMAGE
+    - name: Get AKS credentials
+      run: az aks get-credentails --resources-group $RESOURCES_GROUP --name $CLUSTER_NAME
+    - name: deploy clusters
+      run: |
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
+        kubectl set image deployment/nimbus-site nimbus=$IMAGE
+    - name: get rollout and external ip
+      run: |
+        kubectl rollout status deployment/nimbus-site
+        kubectl get svc nimbus-site
